@@ -176,7 +176,7 @@ def resp_process(model):
         offset = 10
     filters = [model.is_gone == '0']
     if isNotEmpty(key):
-        filters.append(model.key == key)
+        filters.append(model.comment.like(f'%{key}%'))
     if isNotEmpty(negative):
         filters.append(model.is_neg == negative)
     if isNotEmpty(media_type):

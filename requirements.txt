@@ -1,6 +1,6 @@
 Flask
 jieba
-flask-sqlalchemy
+Flask-SQLAlchemy
 flask-cors
 snownlp
 #gunicorn
