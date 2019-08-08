@@ -3,4 +3,4 @@ jieba
 Flask-SQLAlchemy
 flask-cors
 snownlp
-#gunicorn
+gunicorn
