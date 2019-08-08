@@ -28,7 +28,7 @@ def judge_login(func):
 @app.route("/")
 def index():
     print(__name__)
-    return render_template('login.html')
+    return 'welcome'
 
 
 @app.errorhandler(404)
@@ -192,7 +192,7 @@ def resp_process(model):
 
     resp = model.query.filter(*filters).offset(
         offset).limit(pagesize)
-
+    total = model.query.filter(*filters).count()
     lst = []
     for page in resp:
         resp_dict = dict()
@@ -208,7 +208,7 @@ def resp_process(model):
         resp_dict['mediaType'] = page.media_type
         resp_dict['negative'] = page.is_neg
         lst.append(resp_dict)
-    return lst, resp.count()
+    return lst, total
 
 
 # 获取评论列表
