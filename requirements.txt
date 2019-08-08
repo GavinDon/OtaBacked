@@ -1,0 +1,6 @@
+Flask
+jieba
+flask-sqlalchemy
+flask-cors
+snownlp
+#gunicorn

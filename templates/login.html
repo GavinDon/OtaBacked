@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>登陆</title>
+</head>
+<body>
+
+<form action="{{ url_for('login') }}" method="POST">
+    <table>
+        <tbody>
+        <tr>
+            <td>
+                <input type="text" aria-label="用户名" name="username" value="linan">
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <input type="text" aria-label="密码" name="password" value="faf">
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <input type="submit" aria-label="提交" value="提交">
+            </td>
+        </tr>
+        </tbody>
+
+    </table>
+
+</form>
+</body>
+</html>
