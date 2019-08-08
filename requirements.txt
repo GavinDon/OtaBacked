@@ -3,4 +3,5 @@ jieba
 Flask-SQLAlchemy
 flask-cors
 snownlp
+pymysql
 gunicorn
