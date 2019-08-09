@@ -2,9 +2,11 @@ from functools import wraps
 
 from flask import render_template, request, Response, session
 from snownlp import SnowNLP
+from sqlalchemy import and_
+
 from export import app, db
 import modles
-from modles import HuaShanModel, XYMModel
+from modles import HuaShanModel, XYMModel, UserModel
 import custom_response
 import datetime
 
@@ -28,7 +30,7 @@ def judge_login(func):
 @app.route("/")
 def index():
     print(__name__)
-    return 'welcome'
+    return render_template('login.html')
 
 
 @app.errorhandler(404)
@@ -40,13 +42,15 @@ def error404(error):
 def login():
     username = request.form['username']
     password = request.form['password']
-    response = Response()
     # 存储session
-    session['user'] = f'{username}'
-    # 必须设置否则PERMANENT_SESSION_LIFETIME无效 默认session保存31天
-    session.permanent = True
-
-    return custom_response.SuccessResponse(data="ada")
+    query = UserModel.query.filter_by(userName=username, passWord=password).first()
+    if query is not None:
+        session['user'] = f'{username}'
+        # 必须设置否则PERMANENT_SESSION_LIFETIME无效 默认session保存31天
+        session.permanent = True
+        return custom_response.SucNoticeResponse(msg='登陆成功')
+    else:
+        return custom_response.ErrorResponse(err_code=4002, error_msg='帐号或者密码不正确')
 
 
 @app.route('/meit/hs')
@@ -128,15 +132,29 @@ def query_xiec_xym():
 
 
 @app.route('/scenic/hs')
+@judge_login
 def resp_hs():
     resp = resp_process(HuaShanModel)
     return custom_response.SuccessResponse(data=resp[0], total=resp[1])
 
 
 @app.route('/scenic/xym')
+@judge_login
 def resp_xym():
     resp = resp_process(XYMModel)
     return custom_response.SuccessResponse(data=resp[0], total=resp[1])
+
+
+@app.route('/analysis/hs/<year>')
+def analysis_hs(year):
+    resp = analysis(HuaShanModel, year)
+    return custom_response.SuccessResponse(data=resp)
+
+
+@app.route('/analysis/xym/<year>')
+def analysis_xym(year):
+    resp = analysis(XYMModel, year)
+    return custom_response.SuccessResponse(data=resp)
 
 
 """
@@ -148,6 +166,7 @@ def resp_xym():
 
 
 @app.route('/delete')
+@judge_login
 def del_comment_hs():
     del_id = request.values.get('id')
     scenic = request.values.get('scenic')
@@ -160,6 +179,43 @@ def del_comment_hs():
         return custom_response.SucNoticeResponse('删除成功')
     else:
         return custom_response.ErrorResponse('参数传递错误')
+
+
+def analysis(model, year):
+    lst = []
+    # 来源
+    source_tuple = ('美团', "携程", "去哪儿", "猫途鹰",)
+    for i in range(1, 13):
+        xaxis = dict()
+        xaxis['key'] = f'{i}月'
+        y_lst = []
+        for y in source_tuple:
+            yaxis = dict()
+            yaxis['mediaType'] = y
+
+            query_negative = model.query.filter(
+                and_(db.extract('year', model.comment_date) == year,
+                     db.extract('month', model.comment_date) == i,
+                     model.media_type == y,
+                     model.is_neg == '1'
+                     ))
+            query_positive = model.query.filter(
+                and_(db.extract('year', model.comment_date) == year,
+                     db.extract('month', model.comment_date) == i,
+                     model.media_type == y,
+                     model.is_neg == '0'
+                     ))
+            negative_count = query_negative.count()
+            positive_count = query_positive.count()
+            yaxis['negative'] = negative_count
+            yaxis['positive'] = positive_count
+            d = query_negative.first()
+            if d is not None:
+                yaxis['date'] = datetime.date.strftime(d.comment_date, '%Y-%m')
+            y_lst.append(yaxis)
+        xaxis['value'] = y_lst
+        lst.append(xaxis)
+    return lst
 
 
 def resp_process(model):
